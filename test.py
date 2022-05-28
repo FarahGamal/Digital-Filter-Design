@@ -32,10 +32,16 @@ filteredSignal=figure(x_range=(0,20), y_range=(-10,20), tools=['pan,box_zoom'],
 title='Filtered Signal',plot_width=700, plot_height=500)
 
 #sources
-zerosAndPolesSource = ColumnDataSource({
+zerosSource = ColumnDataSource({
     'x': [], 'y': [], 'marker': []
 })
-conjugateSource = ColumnDataSource({
+polesSource = ColumnDataSource({
+    'x': [], 'y': [], 'marker': []
+})
+zerosConjugateSource = ColumnDataSource({
+    'x': [], 'y': [], 'marker': []
+})
+polesConjugateSource = ColumnDataSource({
     'x': [], 'y': [], 'marker': []
 })
 filterSource = ColumnDataSource({
@@ -74,14 +80,19 @@ unitCirclePlot.circle(0,0,radius=1,fill_color=None,line_color='red')
 allPassUnitCirclePlot.circle(0,0,radius=1,fill_color=None,line_color='red')
 
 #rendering
-renderer = unitCirclePlot.scatter(x='x', y='y',marker='marker', source=zerosAndPolesSource,size=15)
-renderer2 = unitCirclePlot.scatter(x='x', y='y',marker='marker', source=conjugateSource,size=15)
+zeroRenderer = unitCirclePlot.scatter(x='x', y='y',marker='marker', source=zerosSource,size=15)
+poleRenderer = unitCirclePlot.scatter(x='x', y='y',marker='marker', source=polesSource,size=15)
+zerosConjugaterenderer = unitCirclePlot.scatter(x='x', y='y',marker='marker', source=zerosConjugateSource,size=15)
+polesConjugaterenderer = unitCirclePlot.scatter(x='x', y='y',marker='marker', source=zerosConjugateSource,size=15)
 renderer3 = allPassUnitCirclePlot.scatter(x='x', y='y',marker='marker', source=filterSource,size=15)
 
 magnitudePlot.line(x='w',y='h',source=source2)
 phasePlot.line(x='w',y='p',source=source3)
 phaseResponseOfFilter.line(x='w',y='p',source=filterP)
-draw_tool = PointDrawTool(renderers=[renderer,renderer2],add=False)
+draw_tool = PointDrawTool(renderers=[zeroRenderer,zerosConjugaterenderer],add=False)
+unitCirclePlot.add_tools(draw_tool)
+unitCirclePlot.toolbar.active_tap = draw_tool
+draw_tool = PointDrawTool(renderers=[poleRenderer,polesConjugaterenderer],add=False)
 unitCirclePlot.add_tools(draw_tool)
 unitCirclePlot.toolbar.active_tap = draw_tool
 draw_tool2 = PointDrawTool(renderers=[renderer3],add=False)
@@ -104,10 +115,16 @@ def UpdateZerosAndPolesMode():
     else: marker = 'x'
 
 def DrawZerosAndPoles(event):
-    zerosAndPolesSource.stream({ 'x': [event.x], 'y': [event.y], 'marker': [marker] })
+    zerosSource.stream({ 'x': [event.x], 'y': [event.y], 'marker': [marker] })
+    polesSource.stream({ 'x': [event.x], 'y': [event.y], 'marker': [marker] })
+    # print([event.x])
+    # print([event.y])
+    print(zerosSource.data)
+    print(polesSource.data)
+
 
 def DeleteZerosAndPoles():
-    zerosAndPolesSource.data = {'x': [], 'y': [], 'marker': []}
+    zerosSource.data = {'x': [], 'y': [], 'marker': []}
 
 #? Controls
 
