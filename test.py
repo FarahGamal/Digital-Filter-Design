@@ -90,11 +90,12 @@ magnitudePlot.line(x='w',y='h',source=source2)
 phasePlot.line(x='w',y='p',source=source3)
 phaseResponseOfFilter.line(x='w',y='p',source=filterP)
 draw_tool = PointDrawTool(renderers=[zeroRenderer,zerosConjugaterenderer],add=False)
-unitCirclePlot.add_tools(draw_tool)
-unitCirclePlot.toolbar.active_tap = draw_tool
 draw_tool = PointDrawTool(renderers=[poleRenderer,polesConjugaterenderer],add=False)
 unitCirclePlot.add_tools(draw_tool)
 unitCirclePlot.toolbar.active_tap = draw_tool
+# draw_tool = PointDrawTool(renderers=[poleRenderer,polesConjugaterenderer],add=False)
+# unitCirclePlot.add_tools(draw_tool)
+# unitCirclePlot.toolbar.active_tap = draw_tool
 draw_tool2 = PointDrawTool(renderers=[renderer3],add=False)
 allPassUnitCirclePlot.add_tools(draw_tool2)
 allPassUnitCirclePlot.toolbar.active_tap = draw_tool2
@@ -115,8 +116,11 @@ def UpdateZerosAndPolesMode():
     else: marker = 'x'
 
 def DrawZerosAndPoles(event):
-    zerosSource.stream({ 'x': [event.x], 'y': [event.y], 'marker': [marker] })
-    polesSource.stream({ 'x': [event.x], 'y': [event.y], 'marker': [marker] })
+    global marker
+    if marker == 'circle':
+        zerosSource.stream({ 'x': [event.x], 'y': [event.y], 'marker': [marker] })
+    else:
+        polesSource.stream({ 'x': [event.x], 'y': [event.y], 'marker': [marker] })
     # print([event.x])
     # print([event.y])
     print(zerosSource.data)
