@@ -97,23 +97,23 @@ realTimeFilteringTitle= Div(text='<h2>Real-time Signal Filtering</h2>', align= '
 #? Methods
 
 # marker = 'circle'
-def UpdateMode():
+def UpdateZerosAndPolesMode():
     global marker
     marker = poleOrZeroSelection.active
     if marker == 0:
         marker = 'circle'
     else:
-        marker = 'asterisk'
+        marker = 'x'
 
-def callback(event):
+def DrawZerosAndPoles(event):
     source.stream({
     'x': [event.x], 'y': [event.y], 'marker': [marker]
     })
 
 #? Controls
 
-unitCirclePlot.on_event(DoubleTap, callback)
-poleOrZeroSelection.on_change('active', lambda attr, old, new: UpdateMode())
+unitCirclePlot.on_event(DoubleTap, DrawZerosAndPoles)
+poleOrZeroSelection.on_change('active', lambda attr, old, new: UpdateZerosAndPolesMode())
 
 ####################################################################################################################
 layout=Column(welcomeMsg,Row(poleOrZeroSelection,conjugateSelection,clearPoles,clearZeros,resetAll),Row(unitCirclePlot,phasePlot,magnitudePlot),allPassTitle,Row(filtersDropdownMenu,applySelectedFilter,removeFilterButton,appliedFiltersDropdownMenu ),Row(allPassUnitCirclePlot,phaseResponseOfFilter,Column(Row(Div(text='a ='),realInputOfFilter, Div(text='+ j'), imgInputOfFilter),addToFiltersLibraryButton)),realTimeFilteringTitle,Row(openFile,applyToSignal),Row(originalSignal,filteredSignal))
