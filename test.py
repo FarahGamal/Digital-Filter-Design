@@ -10,7 +10,7 @@ from scipy.signal import zpk2tf, freqz
 import numpy as np
 from bokeh.models import Dropdown,RadioGroup
 
-#? To run the code write python -m bokeh serve --show test.py in terminal <3 
+#? To run the code write (python -m bokeh serve --show test.py) in terminal <3 
  
 ## Plots and Graphs 
 unitCirclePlot = figure(x_range=(-2,2), y_range=(-2,2), tools=[],
@@ -82,8 +82,8 @@ draw_tool2 = PointDrawTool(renderers=[renderer3],add=False)
 allPassUnitCirclePlot.add_tools(draw_tool2)
 allPassUnitCirclePlot.toolbar.active_tap = draw_tool2
 
+welcomeMsg= Div(text='<h2>Welcome to Our Digital Filter Designer! </h2>', align= 'center')
 
-
-layout=Column(Row(poleOrZeroSelection,conjugateSelection,clearPoles,clearZeros,resetAll),Row(unitCirclePlot,phasePlot,magnitudePlot),Row(filtersDropdownMenu,applyFilterButton,resetFilterButton,addToFiltersList),Row(allPassUnitCirclePlot,phaseResponseOfFilter,magResponseOfFilter),Row(openFile,applyToSignal),Row(originalSignal,filteredSignal))
+layout=Column(welcomeMsg,Row(poleOrZeroSelection,conjugateSelection,clearPoles,clearZeros,resetAll),Row(unitCirclePlot,phasePlot,magnitudePlot),Row(filtersDropdownMenu,applyFilterButton,resetFilterButton,addToFiltersList),Row(allPassUnitCirclePlot,phaseResponseOfFilter,magResponseOfFilter),Row(openFile,applyToSignal),Row(originalSignal,filteredSignal))
 curdoc().add_root(layout)
 
