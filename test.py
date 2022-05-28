@@ -96,7 +96,7 @@ realTimeFilteringTitle= Div(text='<h2>Real-time Signal Filtering</h2>', align= '
 
 #? Methods
 
-# marker = 'circle'
+marker = 'circle'
 def UpdateZerosAndPolesMode():
     global marker
     marker = poleOrZeroSelection.active
