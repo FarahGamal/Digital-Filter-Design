@@ -32,10 +32,10 @@ filteredSignal=figure(x_range=(0,20), y_range=(-10,20), tools=['pan,box_zoom'],
 title='Filtered Signal',plot_width=700, plot_height=500)
 
 #sources
-source = ColumnDataSource({
+zerosAndPolesSource = ColumnDataSource({
     'x': [], 'y': [], 'marker': []
 })
-conjSource = ColumnDataSource({
+conjugateSource = ColumnDataSource({
     'x': [], 'y': [], 'marker': []
 })
 filterSource = ColumnDataSource({
@@ -74,8 +74,8 @@ unitCirclePlot.circle(0,0,radius=1,fill_color=None,line_color='red')
 allPassUnitCirclePlot.circle(0,0,radius=1,fill_color=None,line_color='red')
 
 #rendering
-renderer = unitCirclePlot.scatter(x='x', y='y',marker='marker', source=source,size=15)
-renderer2 = unitCirclePlot.scatter(x='x', y='y',marker='marker', source=conjSource,size=15)
+renderer = unitCirclePlot.scatter(x='x', y='y',marker='marker', source=zerosAndPolesSource,size=15)
+renderer2 = unitCirclePlot.scatter(x='x', y='y',marker='marker', source=conjugateSource,size=15)
 renderer3 = allPassUnitCirclePlot.scatter(x='x', y='y',marker='marker', source=filterSource,size=15)
 
 magnitudePlot.line(x='w',y='h',source=source2)
@@ -100,20 +100,20 @@ marker = 'circle'
 def UpdateZerosAndPolesMode():
     global marker
     marker = poleOrZeroSelection.active
-    if marker == 0:
-        marker = 'circle'
-    else:
-        marker = 'x'
+    if marker == 0: marker = 'circle'
+    else: marker = 'x'
 
 def DrawZerosAndPoles(event):
-    source.stream({
-    'x': [event.x], 'y': [event.y], 'marker': [marker]
-    })
+    zerosAndPolesSource.stream({ 'x': [event.x], 'y': [event.y], 'marker': [marker] })
+
+def DeleteZerosAndPoles():
+    zerosAndPolesSource.data = {'x': [], 'y': [], 'marker': []}
 
 #? Controls
 
 unitCirclePlot.on_event(DoubleTap, DrawZerosAndPoles)
 poleOrZeroSelection.on_change('active', lambda attr, old, new: UpdateZerosAndPolesMode())
+resetAll.on_click(DeleteZerosAndPoles)
 
 ####################################################################################################################
 layout=Column(welcomeMsg,Row(poleOrZeroSelection,conjugateSelection,clearPoles,clearZeros,resetAll),Row(unitCirclePlot,phasePlot,magnitudePlot),allPassTitle,Row(filtersDropdownMenu,applySelectedFilter,removeFilterButton,appliedFiltersDropdownMenu ),Row(allPassUnitCirclePlot,phaseResponseOfFilter,Column(Row(Div(text='a ='),realInputOfFilter, Div(text='+ j'), imgInputOfFilter),addToFiltersLibraryButton)),realTimeFilteringTitle,Row(openFile,applyToSignal),Row(originalSignal,filteredSignal))
