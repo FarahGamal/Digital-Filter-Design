@@ -121,8 +121,7 @@ def DrawZerosAndPoles(event):
         zerosSource.stream({ 'x': [event.x], 'y': [event.y], 'marker': [marker] })
     else:
         polesSource.stream({ 'x': [event.x], 'y': [event.y], 'marker': [marker] })
-    # print([event.x])
-    # print([event.y])
+
     print(zerosSource.data)
     print(polesSource.data)
 
