@@ -92,6 +92,29 @@ welcomeMsg= Div(text='<h2>Welcome to Our Digital Filter Designer! </h2>', align=
 allPassTitle= Div(text='<h2>Phase Correction using All-pass Filter </h2>', align= 'start')
 realTimeFilteringTitle= Div(text='<h2>Real-time Signal Filtering</h2>', align= 'start')
 
+################################################################################################################
 
+#? Methods
+
+# marker = 'circle'
+def UpdateMode():
+    global marker
+    marker = poleOrZeroSelection.active
+    if marker == 0:
+        marker = 'circle'
+    else:
+        marker = 'asterisk'
+
+def callback(event):
+    source.stream({
+    'x': [event.x], 'y': [event.y], 'marker': [marker]
+    })
+
+#? Controls
+
+unitCirclePlot.on_event(DoubleTap, callback)
+poleOrZeroSelection.on_change('active', lambda attr, old, new: UpdateMode())
+
+####################################################################################################################
 layout=Column(welcomeMsg,Row(poleOrZeroSelection,conjugateSelection,clearPoles,clearZeros,resetAll),Row(unitCirclePlot,phasePlot,magnitudePlot),allPassTitle,Row(filtersDropdownMenu,applySelectedFilter,removeFilterButton,appliedFiltersDropdownMenu ),Row(allPassUnitCirclePlot,phaseResponseOfFilter,Column(Row(Div(text='a ='),realInputOfFilter, Div(text='+ j'), imgInputOfFilter),addToFiltersLibraryButton)),realTimeFilteringTitle,Row(openFile,applyToSignal),Row(originalSignal,filteredSignal))
 curdoc().add_root(layout)
