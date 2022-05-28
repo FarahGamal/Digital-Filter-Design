@@ -13,23 +13,23 @@ from bokeh.models import PointDrawTool, ColumnDataSource,Button,Div
 from bokeh.models.widgets import RadioButtonGroup, FileInput, TextInput
 
 
-#? To run the code write python -m bokeh serve --show test.py in terminal <3 
+#! To run the code write python -m bokeh serve --show test.py in terminal <3 
  
 ## Plots and Graphs 
 unitCirclePlot = figure(x_range=(-2,2), y_range=(-2,2), tools=[],
            title='zPolar',plot_width=500, plot_height=500)
 allPassUnitCirclePlot = figure(x_range=(-2,2), y_range=(-2,2), tools=[],
-           title='Zero-Ploe Combination Of Selected All-pass Filter',plot_width=500, plot_height=500)
+           title='Zero-Ploe Combination Of Selected All-pass Filter',plot_width=650, plot_height=500)
 phasePlot=figure(x_range=(0,3.14), y_range=(-3.14,3.14), tools=['pan,box_zoom'],
            title='Phase Response',plot_width=500, plot_height=500)
 magnitudePlot=figure(x_range=(0,3.14), y_range=(0,3), tools=['pan,box_zoom'],
            title='Magnitude Response',plot_width=500, plot_height=500)           
 phaseResponseOfFilter=figure(x_range=(0,3.14), y_range=(-3.14,3.14), tools=['pan,box_zoom'],
-title='Phase Response of selected All-pass Filter',plot_width=500, plot_height=500)
-originalSignal=figure(x_range=(0,10), y_range=(-10,10), tools=['pan,box_zoom'],
-title='Original Signal',plot_width=500, plot_height=500)
-filteredSignal=figure(x_range=(0,10), y_range=(-10,10), tools=['pan,box_zoom'],
-title='Filtered Signal',plot_width=500, plot_height=500)
+title='Phase Response of selected All-pass Filter',plot_width=650, plot_height=500)
+originalSignal=figure(x_range=(0,20), y_range=(-10,20), tools=['pan,box_zoom'],
+title='Original Signal',plot_width=700, plot_height=500)
+filteredSignal=figure(x_range=(0,20), y_range=(-10,20), tools=['pan,box_zoom'],
+title='Filtered Signal',plot_width=700, plot_height=500)
 
 #sources
 source = ColumnDataSource({
@@ -53,21 +53,21 @@ filterP=ColumnDataSource({
 
 ##Buttons and controls
 poleOrZeroSelection = RadioButtonGroup(labels=['Zero', 'Pole'], active=0)
-conjugateSelection = RadioButtonGroup(labels=['No conjugate', 'Conjugate'], active=0)
-resetAll = Button(label='Reset all')
-clearZeros= Button(label='Clear Zeros')
-clearPoles= Button(label='Clear Poles')
+conjugateSelection = RadioButtonGroup(labels=['No Conjugate', 'Conjugate'], active=0)
+resetAll = Button(label='Reset all', width=270)
+clearZeros= Button(label='Clear Zeros', width=270)
+clearPoles= Button(label='Clear Poles', width=270)
 filtersLibrary = [("Filter 1", "0"), ("Filter 2", "1"), ("Filter 3", "2")]
 appliedAllPassFilters=[(" Designed Filter 1","0" )] 
-applyFilterButton = Button(label='Apply')
+addToFiltersLibraryButton = Button(label='Add To All-pass Filters Library', width=100)
 removeFilterButton = Button(label='Remove Selected All-pass Filter')
-addToFiltersList = Button(label='Add to filters list')
+applySelectedFilter = Button(label='Apply Selected All-pass Filter')
 filtersDropdownMenu = Dropdown(label="All-pass Filters Library", button_type="warning", menu=filtersLibrary)
 appliedFiltersDropdownMenu = Dropdown(label="Applied All-pass Filters to Designed Digital Filter", button_type="warning", menu=appliedAllPassFilters)
-realInputOfFilter= TextInput(title='')
-imgInputOfFilter= TextInput(title='')
-openFile= FileInput(accept= '.csv', width=500)
-applyToSignal= Button(label='Apply Filter on Signal')
+realInputOfFilter= TextInput(title='', width=50)
+imgInputOfFilter= TextInput(title='', width=50)
+openFile= FileInput(accept= '.csv', width=700)
+applyToSignal= Button(label='Apply Filter on Signal', width = 150)
 
 ##Unit Circles Plotting
 unitCirclePlot.circle(0,0,radius=1,fill_color=None,line_color='red')
@@ -89,7 +89,10 @@ allPassUnitCirclePlot.add_tools(draw_tool2)
 allPassUnitCirclePlot.toolbar.active_tap = draw_tool2
 
 welcomeMsg= Div(text='<h2>Welcome to Our Digital Filter Designer! </h2>', align= 'center')
+allPassTitle= Div(text='<h2>Phase Correction using All-pass Filter </h2>', align= 'start')
+realTimeFilteringTitle= Div(text='<h2>Real-time Signal Filtering</h2>', align= 'start')
 
-layout=Column(welcomeMsg,Row(poleOrZeroSelection,conjugateSelection,clearPoles,clearZeros,resetAll),Row(unitCirclePlot,phasePlot,magnitudePlot),Row(filtersDropdownMenu,addToFiltersList,removeFilterButton,appliedFiltersDropdownMenu ),Row(allPassUnitCirclePlot,phaseResponseOfFilter,Column(Row(Div(text='a ='),realInputOfFilter, Div(text='+ j'), imgInputOfFilter),applyFilterButton)),Row(openFile,applyToSignal),Row(originalSignal,filteredSignal))
+
+layout=Column(welcomeMsg,Row(poleOrZeroSelection,conjugateSelection,clearPoles,clearZeros,resetAll),Row(unitCirclePlot,phasePlot,magnitudePlot),Row(filtersDropdownMenu,applySelectedFilter,removeFilterButton,appliedFiltersDropdownMenu ),allPassTitle,Row(allPassUnitCirclePlot,phaseResponseOfFilter,Column(Row(Div(text='a ='),realInputOfFilter, Div(text='+ j'), imgInputOfFilter),addToFiltersLibraryButton)),realTimeFilteringTitle,Row(openFile,applyToSignal),Row(originalSignal,filteredSignal))
 curdoc().add_root(layout)
 
