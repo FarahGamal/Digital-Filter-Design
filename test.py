@@ -14,8 +14,15 @@ from bokeh.models.widgets import RadioButtonGroup, FileInput, TextInput
 
 
 #! To run the code write python -m bokeh serve --show test.py in terminal <3 
- 
+
+## Global Variables
+
+#global marker
+marker = 'circle'
+conjugate = 0
+
 ## Plots and Graphs 
+
 unitCirclePlot = figure(x_range=(-2,2), y_range=(-2,2), tools=[],
            title='zPolar',plot_width=500, plot_height=500)
 allPassUnitCirclePlot = figure(x_range=(-2,2), y_range=(-2,2), tools=[],
@@ -32,6 +39,7 @@ filteredSignal=figure(x_range=(0,20), y_range=(-10,20), tools=['pan,box_zoom'],
 title='Filtered Signal',plot_width=700, plot_height=500)
 
 #sources
+
 zerosSource = ColumnDataSource({
     'x': [], 'y': [], 'marker': []
 })
@@ -47,10 +55,10 @@ polesConjugateSource = ColumnDataSource({
 filterSource = ColumnDataSource({
     'x': [], 'y': [], 'marker': []
 })
-source2= ColumnDataSource({
+magnitudeSource= ColumnDataSource({
     'w':[], 'h':[]
 })
-source3= ColumnDataSource({
+phaseSource= ColumnDataSource({
     'w':[], 'p':[]
 })
 filterP=ColumnDataSource({
@@ -58,6 +66,7 @@ filterP=ColumnDataSource({
 })
 
 ##Buttons and controls
+
 poleOrZeroSelection = RadioButtonGroup(labels=['Zero', 'Pole'], active=0)
 conjugateSelection = RadioButtonGroup(labels=['No Conjugate', 'Conjugate'], active=0)
 resetAll = Button(label='Reset all', width=270)
@@ -76,26 +85,26 @@ openFile= FileInput(accept= '.csv', width=700)
 applyToSignal= Button(label='Apply Filter on Signal', width = 150)
 
 ##Unit Circles Plotting
+
 unitCirclePlot.circle(0,0,radius=1,fill_color=None,line_color='red')
 allPassUnitCirclePlot.circle(0,0,radius=1,fill_color=None,line_color='red')
 
 #rendering
+
 zeroRenderer = unitCirclePlot.scatter(x='x', y='y',marker='marker', source=zerosSource,size=15)
 poleRenderer = unitCirclePlot.scatter(x='x', y='y',marker='marker', source=polesSource,size=15)
 zerosConjugaterenderer = unitCirclePlot.scatter(x='x', y='y',marker='marker', source=zerosConjugateSource,size=15)
-polesConjugaterenderer = unitCirclePlot.scatter(x='x', y='y',marker='marker', source=zerosConjugateSource,size=15)
+polesConjugaterenderer = unitCirclePlot.scatter(x='x', y='y',marker='marker', source=polesConjugateSource,size=15)
 renderer3 = allPassUnitCirclePlot.scatter(x='x', y='y',marker='marker', source=filterSource,size=15)
 
-magnitudePlot.line(x='w',y='h',source=source2)
-phasePlot.line(x='w',y='p',source=source3)
+magnitudePlot.line(x='w',y='h',source=magnitudeSource)
+phasePlot.line(x='w',y='p',source=phaseSource)
 phaseResponseOfFilter.line(x='w',y='p',source=filterP)
-draw_tool = PointDrawTool(renderers=[zeroRenderer,zerosConjugaterenderer],add=False)
-draw_tool = PointDrawTool(renderers=[poleRenderer,polesConjugaterenderer],add=False)
+
+draw_tool = PointDrawTool(renderers=[zeroRenderer,poleRenderer,zerosConjugaterenderer,polesConjugaterenderer],add=False)
 unitCirclePlot.add_tools(draw_tool)
 unitCirclePlot.toolbar.active_tap = draw_tool
-# draw_tool = PointDrawTool(renderers=[poleRenderer,polesConjugaterenderer],add=False)
-# unitCirclePlot.add_tools(draw_tool)
-# unitCirclePlot.toolbar.active_tap = draw_tool
+
 draw_tool2 = PointDrawTool(renderers=[renderer3],add=False)
 allPassUnitCirclePlot.add_tools(draw_tool2)
 allPassUnitCirclePlot.toolbar.active_tap = draw_tool2
@@ -104,37 +113,69 @@ welcomeMsg= Div(text='<h2>Welcome to Our Digital Filter Designer! </h2>', align=
 allPassTitle= Div(text='<h2>Phase Correction using All-pass Filter </h2>', align= 'start')
 realTimeFilteringTitle= Div(text='<h2>Real-time Signal Filtering</h2>', align= 'start')
 
-################################################################################################################
+#########################################################################################################################################
 
 #? Methods
 
-marker = 'circle'
+# Update zeros and poles mode
 def UpdateZerosAndPolesMode():
     global marker
     marker = poleOrZeroSelection.active
     if marker == 0: marker = 'circle'
     else: marker = 'x'
 
+# Draw zeros and poles on the graph
 def DrawZerosAndPoles(event):
     global marker
-    if marker == 'circle':
-        zerosSource.stream({ 'x': [event.x], 'y': [event.y], 'marker': [marker] })
-    else:
-        polesSource.stream({ 'x': [event.x], 'y': [event.y], 'marker': [marker] })
-
+    if marker == 'circle': zerosSource.stream({ 'x': [event.x], 'y': [event.y], 'marker': [marker] })
+    else: polesSource.stream({ 'x': [event.x], 'y': [event.y], 'marker': [marker] })
     print(zerosSource.data)
     print(polesSource.data)
 
-
+# Delete both zeros and poles
 def DeleteZerosAndPoles():
     zerosSource.data = {'x': [], 'y': [], 'marker': []}
+    polesSource.data = {'x': [], 'y': [], 'marker': []}
+    zerosConjugateSource.data = {'x': [], 'y': [], 'marker': []}
+    polesConjugateSource.data = {'x': [], 'y': [], 'marker': []}
+
+# Deletes all zeros
+def DeleteZeros():
+    zerosSource.data = {'x': [], 'y': [], 'marker': []}
+    zerosConjugateSource.data = {'x': [], 'y': [], 'marker': []}
+
+# Deletes all poles
+def DeletePoles():
+    polesSource.data = {'x': [], 'y': [], 'marker': []}
+    polesConjugateSource.data = {'x': [], 'y': [], 'marker': []}
+
+# Update the Conjugate Mode  
+def UpdateConjugateMode():
+    global conjugate
+    conjugate = conjugateSelection.active
+    if conjugate == 0: 
+        zerosConjugateSource.data = {'x': [], 'y': [], 'marker': []}
+        polesConjugateSource.data = {'x': [], 'y': [], 'marker': []}
+    else: DrawConjugate()
+
+# Draw the Conjugate
+def DrawConjugate():
+    for i in range(len(zerosSource.data['y'])):
+        zerosConjugateSource.stream({'x':[zerosSource.data['x'][i]], 'marker':[zerosSource.data['marker'][i]], 'y':[zerosSource.data['y'][i]*-1]})
+    for j in range(len(polesSource.data['y'])):
+        polesConjugateSource.stream({'x':[polesSource.data['x'][j]], 'marker':[polesSource.data['marker'][j]], 'y':[polesSource.data['y'][j]*-1]})
+
+
 
 #? Controls
 
+clearZeros.on_click(DeleteZeros)
+clearPoles.on_click(DeletePoles)
+resetAll.on_click(DeleteZerosAndPoles)
 unitCirclePlot.on_event(DoubleTap, DrawZerosAndPoles)
 poleOrZeroSelection.on_change('active', lambda attr, old, new: UpdateZerosAndPolesMode())
-resetAll.on_click(DeleteZerosAndPoles)
+conjugateSelection.on_change('active', lambda attr, old, new: UpdateConjugateMode())
 
-####################################################################################################################
+#########################################################################################################################################
 layout=Column(welcomeMsg,Row(poleOrZeroSelection,conjugateSelection,clearPoles,clearZeros,resetAll),Row(unitCirclePlot,phasePlot,magnitudePlot),allPassTitle,Row(filtersDropdownMenu,applySelectedFilter,removeFilterButton,appliedFiltersDropdownMenu ),Row(allPassUnitCirclePlot,phaseResponseOfFilter,Column(Row(Div(text='a ='),realInputOfFilter, Div(text='+ j'), imgInputOfFilter),addToFiltersLibraryButton)),realTimeFilteringTitle,Row(openFile,applyToSignal),Row(originalSignal,filteredSignal))
 curdoc().add_root(layout)
