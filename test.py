@@ -17,7 +17,6 @@ from bokeh.models.widgets import RadioButtonGroup, FileInput, TextInput
 
 ## Global Variables
 
-#global marker
 marker = 'circle'
 conjugate = 0
 zerosComplexList = []
@@ -224,9 +223,6 @@ def update(attr, old, new):
     DrawConjugate()
     ZerosAndPolesCalculations()
 
-zerosSource.on_change('data', update)
-polesSource.on_change('data', update)
-
 def AddNewAllPassFilter():
     realPartOfA = realInputOfFilter.value_input
     imaginaryPartOfA = imgInputOfFilter.value_input
@@ -326,6 +322,8 @@ def applyFilterOnSignal():
 
 clearZeros.on_click(DeleteZeros)
 clearPoles.on_click(DeletePoles)
+zerosSource.on_change('data', update)
+polesSource.on_change('data', update)
 resetAll.on_click(DeleteZerosAndPoles)
 applyToSignal.on_click(applyFilterOnSignal)
 filtersDropdownMenu.on_click(SelectAllPassFilter)
