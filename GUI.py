@@ -22,9 +22,9 @@ magnitudePlot=figure(x_range=(0,1), y_range=(0,3), tools=['pan,wheel_zoom'],
            title='Magnitude Response',plot_width=500, plot_height=500)           
 phaseResponseOfFilter=figure(x_range=(0,1), y_range=(-3.14,3.14), tools=['pan,wheel_zoom'],
 title='Phase Response of selected All-pass Filter',plot_width=650, plot_height=500)
-originalSignal=figure(x_range=(0,0.1), y_range=(-1,1), tools=['pan,wheel_zoom'],
+originalSignal=figure(x_range=(0,0.1), y_range=(-0.3,-0.1), tools=['pan,wheel_zoom'],
 title='Original Signal',plot_width=700, plot_height=500)
-filteredSignal=figure(x_range=(0,0.1), y_range=(-1,1), tools=['pan,wheel_zoom'],
+filteredSignal=figure(x_range=(0,0.1), y_range=(-0.3,-0.1), tools=['pan,wheel_zoom'],
 title='Filtered Signal',plot_width=700, plot_height=500)
 
 #sources
@@ -36,16 +36,16 @@ polesSource = ColumnDataSource({
     'x': [], 'y': [], 'marker': []
 })
 zerosConjugateSource = ColumnDataSource({
-    'x': [], 'y': [], 'marker': []
+    'real': [], 'img': [], 'marker': []
 })
 polesConjugateSource = ColumnDataSource({
-    'x': [], 'y': [], 'marker': []
+    'real': [], 'img': [], 'marker': []
 })
 magnitudeSource= ColumnDataSource({
-    'w':[], 'h':[]
+    'frequencies':[], 'magnitude':[]
 })
 phaseSource= ColumnDataSource({
-    'w':[], 'p':[]
+    'frequencies':[], 'phase':[]
 })
 allPassFilterZeroSource = ColumnDataSource({
     'x': [], 'y': [], 'marker': []
@@ -93,13 +93,13 @@ allPassUnitCirclePlot.circle(0,0,radius=1,fill_color=None,line_color='red')
 
 zeroRenderer = unitCirclePlot.scatter(x='x', y='y',marker='marker', source=zerosSource,size=15)
 poleRenderer = unitCirclePlot.scatter(x='x', y='y',marker='marker', source=polesSource,size=15)
-zerosConjugaterenderer = unitCirclePlot.scatter(x='x', y='y',marker='marker', source=zerosConjugateSource,size=15)
-polesConjugaterenderer = unitCirclePlot.scatter(x='x', y='y',marker='marker', source=polesConjugateSource,size=15)
+zerosConjugaterenderer = unitCirclePlot.scatter(x='real', y='img',marker='marker', source=zerosConjugateSource,size=15)
+polesConjugaterenderer = unitCirclePlot.scatter(x='real', y='img',marker='marker', source=polesConjugateSource,size=15)
 allPassFilterZeroRenderer = allPassUnitCirclePlot.scatter(x='x', y='y',marker='marker', source=allPassFilterZeroSource,size=15)
 allPassFilterPoleRenderer = allPassUnitCirclePlot.scatter(x='x', y='y',marker='marker', source=allPassFilterPoleSource,size=15)
 
-magnitudePlot.line(x='w',y='h',source=magnitudeSource)
-phasePlot.line(x='w',y='p',source=phaseSource)
+magnitudePlot.line(x='frequencies',y='magnitude',source=magnitudeSource)
+phasePlot.line(x='frequencies',y='phase',source=phaseSource)
 phaseResponseOfFilter.line(x='frequencies',y='phases',source=phaseResponseOfAllPassFilterSource)
 
 draw_tool = PointDrawTool(renderers=[zeroRenderer,poleRenderer,zerosConjugaterenderer,polesConjugaterenderer],add=False)
