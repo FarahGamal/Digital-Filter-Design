@@ -22,9 +22,9 @@ magnitudePlot=figure(x_range=(0,1), y_range=(0,3), tools=['pan,wheel_zoom'],
            title='Magnitude Response',plot_width=500, plot_height=500)           
 phaseResponseOfFilter=figure(x_range=(0,1), y_range=(-3.14,3.14), tools=['pan,wheel_zoom'],
 title='Phase Response of selected All-pass Filter',plot_width=650, plot_height=500)
-originalSignal=figure(x_range=(0,0.1), y_range=(-0.3,-0.1), tools=['pan,wheel_zoom'],
+originalSignal=figure(x_range=(0,1), y_range=(-1,1), tools=['pan,wheel_zoom'],
 title='Original Signal',plot_width=700, plot_height=500)
-filteredSignal=figure(x_range=(0,0.1), y_range=(-0.3,-0.1), tools=['pan,wheel_zoom'],
+filteredSignal=figure(x_range=(0,1), y_range=(-1,1), tools=['pan,wheel_zoom'],
 title='Filtered Signal',plot_width=700, plot_height=500)
 
 #sources
@@ -81,7 +81,7 @@ appliedFiltersDropdownMenu = Dropdown(label="Applied All-pass Filters to Designe
 realInputOfFilter= TextInput(title='', width=50)
 imgInputOfFilter= TextInput(title='', width=50)
 openFile= FileInput(accept= '.csv', width=700)
-applyToSignal= Button(label='Add Filter to List', width = 300)
+applyToSignal= Button(label='Add Filter', width = 300)
 speedControlSlider=Slider(width=250,start=1,end=100,value=1,step=10 ,title='Speed of filtering process')
 
 ##Unit Circles Plotting

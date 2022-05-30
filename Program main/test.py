@@ -1,13 +1,16 @@
 #*######### Imports ###########
+
+import sys, os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import io
 import base64
-from GUI import *
+import GUI
 import numpy as np
 import pandas as pd
 from functools import partial
 from scipy.signal import zpk2tf, freqz, lfilter
 
-#? To run the code write python -m bokeh serve --show test.py in terminal <3 
+#? To run the code write python -m bokeh serve --show test.py in terminal  
 
 #! --------------------------------------------------------------------------------------------------------------------------------------------------- #
 
@@ -28,19 +31,19 @@ polesComplexList = []
 
 # Update zeros and poles mode
 def UpdateZerosAndPolesMode():
-    global marker; marker = poleOrZeroSelection.active
+    global marker; marker = GUI.poleOrZeroSelection.active
     if marker == 0: marker = 'circle'
     else: marker = 'x'
 
 # Draw zeros and poles on the graph
 def DrawZerosAndPoles(event):
     global marker
-    if marker == 'circle': StremSource(zerosSource, { 'x': [event.x], 'y': [event.y], 'marker': [marker] })
-    else: StremSource(polesSource, { 'x': [event.x], 'y': [event.y], 'marker': [marker] })
+    if marker == 'circle': StremSource(GUI.zerosSource, { 'x': [event.x], 'y': [event.y], 'marker': [marker] })
+    else: StremSource(GUI.polesSource, { 'x': [event.x], 'y': [event.y], 'marker': [marker] })
         
 # Delete both zeros and poles
 def DeleteZerosAndPoles():
-    ClearSource(zerosSource, {'x': [], 'y': [], 'marker': []}); ClearSource(polesSource, {'x': [], 'y': [], 'marker': []}); ClearSource(magnitudeSource, {'frequencies': [], 'magnitude': []}); ClearSource(phaseSource, {'frequencies': [], 'phase': []}); ClearSource(zerosConjugateSource, {'real': [], 'img': [], 'marker': []}); ClearSource(polesConjugateSource, {'real': [], 'img': [], 'marker': []})
+    ClearSource(GUI.zerosSource, {'x': [], 'y': [], 'marker': []}); ClearSource(GUI.polesSource, {'x': [], 'y': [], 'marker': []}); ClearSource(GUI.magnitudeSource, {'frequencies': [], 'magnitude': []}); ClearSource(GUI.phaseSource, {'frequencies': [], 'phase': []}); ClearSource(GUI.zerosConjugateSource, {'real': [], 'img': [], 'marker': []}); ClearSource(GUI.polesConjugateSource, {'real': [], 'img': [], 'marker': []})
     ZerosAndPolesCalculations()
 
 # Delete all zeros or all poles
@@ -50,25 +53,25 @@ def DeleteAllZerosOrAllPoles(zerosOrPolesSource, zerosOrPolesConjugateSource):
 # Update the Conjugate Mode  
 def UpdateConjugateMode():
     global conjugate
-    conjugate = conjugateSelection.active
+    conjugate = GUI.conjugateSelection.active
     if conjugate == 0: 
-        ClearSource(zerosConjugateSource, {'real': [], 'img': [], 'marker': []}); ClearSource(polesConjugateSource, {'real': [], 'img': [], 'marker': []}); ZerosAndPolesCalculations()
+        ClearSource(GUI.zerosConjugateSource, {'real': [], 'img': [], 'marker': []}); ClearSource(GUI.polesConjugateSource, {'real': [], 'img': [], 'marker': []}); ZerosAndPolesCalculations()
     else: DrawConjugate()
 
 # Draw the Conjugate
 def DrawConjugate():
     global conjugate
-    conjugate = conjugateSelection.active
+    conjugate = GUI.conjugateSelection.active
     if conjugate == 1: 
-        ClearSource(zerosConjugateSource, {'real': [], 'img': [], 'marker': []}); ClearSource(polesConjugateSource, {'real': [], 'img': [], 'marker': []}); ZerosAndPolesCalculations()
-        ConjugateForm(zerosSource, zerosConjugateSource, 'x', 'y', 'real', 'img'); ConjugateForm(polesSource, polesConjugateSource, 'x', 'y', 'real', 'img')
+        ClearSource(GUI.zerosConjugateSource, {'real': [], 'img': [], 'marker': []}); ClearSource(GUI.polesConjugateSource, {'real': [], 'img': [], 'marker': []}); ZerosAndPolesCalculations()
+        ConjugateForm(GUI.zerosSource, GUI.zerosConjugateSource, 'x', 'y', 'real', 'img'); ConjugateForm(GUI.polesSource, GUI.polesConjugateSource, 'x', 'y', 'real', 'img')
     ZerosAndPolesCalculations()
 
 # Put zeros and poles in a complex form then call function to plot magnitude and phase
 def ZerosAndPolesCalculations():
     global zerosComplexList, polesComplexList
     zerosComplexList, polesComplexList = [], []
-    ComplexForm(zerosSource, zerosComplexList, 'x', 'y'); ComplexForm(zerosConjugateSource, zerosComplexList, 'real', 'img'); ComplexForm(polesSource, polesComplexList, 'x', 'y'); ComplexForm(polesConjugateSource, polesComplexList, 'real', 'img')
+    ComplexForm(GUI.zerosSource, zerosComplexList, 'x', 'y'); ComplexForm(GUI.zerosConjugateSource, zerosComplexList, 'real', 'img'); ComplexForm(GUI.polesSource, polesComplexList, 'x', 'y'); ComplexForm(GUI.polesConjugateSource, polesComplexList, 'real', 'img')
     PlotMagnitudeAndPhase()
 
 # Plot Magnitude and phase
@@ -77,10 +80,10 @@ def PlotMagnitudeAndPhase():
     numeratorOfTransferFunction, denominatorOfTransferFunction = zpk2tf(zerosComplexList, polesComplexList, 1)
     frequencies, z_transform = freqz(numeratorOfTransferFunction, denominatorOfTransferFunction); frequencies = frequencies/max(frequencies)
     phase = np.unwrap(np.angle(z_transform)); magnitude = np.sqrt(z_transform.real**2 + z_transform.imag**2)
-    if len(zerosSource.data['x']) == 0 and len(polesSource.data['x']) == 0:
+    if len(GUI.zerosSource.data['x']) == 0 and len(GUI.polesSource.data['x']) == 0:
         magnitude, frequencies, phase = [], [], []
-        ClearSource(magnitudeSource, {'frequencies': [], 'magnitude': []}); ClearSource(phaseSource, {'frequencies': [], 'phase': []})
-    EmptyAndStreamSource(magnitudeSource, {'frequencies': [], 'magnitude': []}, {'frequencies': frequencies, 'magnitude': magnitude}); EmptyAndStreamSource(phaseSource, {'frequencies': [], 'phase': []}, {'frequencies': frequencies, 'phase': phase})
+        ClearSource(GUI.magnitudeSource, {'frequencies': [], 'magnitude': []}); ClearSource(GUI.phaseSource, {'frequencies': [], 'phase': []})
+    EmptyAndStreamSource(GUI.magnitudeSource, {'frequencies': [], 'magnitude': []}, {'frequencies': frequencies, 'magnitude': magnitude}); EmptyAndStreamSource(GUI.phaseSource, {'frequencies': [], 'phase': []}, {'frequencies': frequencies, 'phase': phase})
 
 # Update magnitude and phase graph and conjugate
 def update(attr, old, new):
@@ -93,38 +96,38 @@ def update(attr, old, new):
 
 # Adding New User-Definied All-Pass Filter to Website Library
 def AddNewAllPassFilter():
-    realPartOfA, imaginaryPartOfA = realInputOfFilter.value_input, imgInputOfFilter.value_input; realInputOfFilter.value, imgInputOfFilter.value = '', ''
-    if float(imaginaryPartOfA) < 0: filtersLibrary.append((FormulateSelectedAllPassFilter(realPartOfA, np.abs(float(imaginaryPartOfA)), '-'), str(len(filtersLibrary))))
-    else: filtersLibrary.append((FormulateSelectedAllPassFilter(realPartOfA, imaginaryPartOfA, '+'), str(len(filtersLibrary))))
-    filtersDropdownMenu.menu = filtersLibrary 
+    realPartOfA, imaginaryPartOfA = GUI.realInputOfFilter.value_input, GUI.imgInputOfFilter.value_input; GUI.realInputOfFilter.value, GUI.imgInputOfFilter.value = '', ''
+    if float(imaginaryPartOfA) < 0: GUI.filtersLibrary.append((FormulateSelectedAllPassFilter(realPartOfA, np.abs(float(imaginaryPartOfA)), '-'), str(len(GUI.filtersLibrary))))
+    else: GUI.filtersLibrary.append((FormulateSelectedAllPassFilter(realPartOfA, imaginaryPartOfA, '+'), str(len(GUI.filtersLibrary))))
+    GUI.filtersDropdownMenu.menu = GUI.filtersLibrary 
 
 # Updating All-Pass Unit Circle and All-Pass Phase Response According to Selected All-Pass Filter
 def UpdatingAllPassUnitCircleAndPhaseResponseAccordingToSelectedFilter(event, filterState):
     indexOfSelectedItem = int(event.item)
-    if filterState == 'Not Applied': selectedAllPassFilter = filtersLibrary[indexOfSelectedItem][0]
+    if filterState == 'Not Applied': selectedAllPassFilter = GUI.filtersLibrary[indexOfSelectedItem][0]
     elif filterState == 'Applied':
-        for allPassFilter in appliedAllPassFilters:
+        for allPassFilter in GUI.appliedAllPassFilters:
             if allPassFilter[1] == str(indexOfSelectedItem): selectedAllPassFilter = allPassFilter[0]
-    allPassUnitCirclePlot.title.text, phaseResponseOfFilter.title.text = 'Zero-Pole Combination Of Selected All-pass Filter: ' + selectedAllPassFilter, 'Phase Response of selected All-pass Filter: ' + selectedAllPassFilter
+    GUI.allPassUnitCirclePlot.title.text, GUI.phaseResponseOfFilter.title.text = 'Zero-Pole Combination Of Selected All-pass Filter: ' + selectedAllPassFilter, 'Phase Response of selected All-pass Filter: ' + selectedAllPassFilter
     allPassFilterPole, allPassFilterZero = complex(selectedAllPassFilter), 1/np.conj(complex(selectedAllPassFilter))
-    EmptyAndStreamSource(allPassFilterZeroSource, {'x': [], 'y': [], 'marker': []}, {'x':[allPassFilterZero.real], 'y':[allPassFilterZero.imag], 'marker':['circle']}); EmptyAndStreamSource(allPassFilterPoleSource, {'x': [], 'y': [], 'marker': []}, {'x':[allPassFilterPole.real], 'y':[allPassFilterPole.imag], 'marker':['x']})
+    EmptyAndStreamSource(GUI.allPassFilterZeroSource, {'x': [], 'y': [], 'marker': []}, {'x':[allPassFilterZero.real], 'y':[allPassFilterZero.imag], 'marker':['circle']}); EmptyAndStreamSource(GUI.allPassFilterPoleSource, {'x': [], 'y': [], 'marker': []}, {'x':[allPassFilterPole.real], 'y':[allPassFilterPole.imag], 'marker':['x']})
 
 # Updating All-Pass Phase Response Plot According to Selected All-Pass Filter
 def UpdateAllPassPhaseResponsePlot(attribute, oldSourceValue, newSourceValue):
     if newSourceValue['x'] != []:
         valueOfA = complex(newSourceValue['x'][0],newSourceValue['y'][0]); frequencies, z_transform = freqz([-np.conj(valueOfA), 1.0], [1.0, -valueOfA])
         frequencies, phaseResponseOfAllPassFilter = frequencies/max(frequencies), np.unwrap(np.angle(z_transform))
-        EmptyAndStreamSource(phaseResponseOfAllPassFilterSource, {'frequencies': [], 'phases': []}, {'frequencies': frequencies, 'phases': phaseResponseOfAllPassFilter})
+        EmptyAndStreamSource(GUI.phaseResponseOfAllPassFilterSource, {'frequencies': [], 'phases': []}, {'frequencies': frequencies, 'phases': phaseResponseOfAllPassFilter})
 
 # Handling Functionality to Applying or Removing Selected All-Pass Filter on User Designed Digital Filter
 def ActionOfSelectedAllPassFilterOnDesignedFilter(actionType):
-    if allPassFilterPoleSource.data['y'][0] < 0: stringOfAOfSelectedFilter = FormulateSelectedAllPassFilter(allPassFilterPoleSource.data['x'][0], np.abs(allPassFilterPoleSource.data['y'][0]), '-')
-    else: stringOfAOfSelectedFilter = FormulateSelectedAllPassFilter(allPassFilterPoleSource.data['x'][0], allPassFilterPoleSource.data['y'][0], '+')
-    if actionType == 'Add': appliedAllPassFilters.append((stringOfAOfSelectedFilter, str(len(appliedAllPassFilters))))
+    if GUI.allPassFilterPoleSource.data['y'][0] < 0: stringOfAOfSelectedFilter = FormulateSelectedAllPassFilter(GUI.allPassFilterPoleSource.data['x'][0], np.abs(GUI.allPassFilterPoleSource.data['y'][0]), '-')
+    else: stringOfAOfSelectedFilter = FormulateSelectedAllPassFilter(GUI.allPassFilterPoleSource.data['x'][0], GUI.allPassFilterPoleSource.data['y'][0], '+')
+    if actionType == 'Add': GUI.appliedAllPassFilters.append((stringOfAOfSelectedFilter, str(len(GUI.appliedAllPassFilters))))
     elif actionType == 'Remove':
-        for allPassFilter in appliedAllPassFilters:
-            if allPassFilter[0] == stringOfAOfSelectedFilter: allPassFilterToBeRemoved = allPassFilter; appliedAllPassFilters.remove(allPassFilterToBeRemoved)
-    appliedFiltersDropdownMenu.menu = appliedAllPassFilters; CalculateDesignedFilterPhaseResponseAfterAllPassCorrection(complex(stringOfAOfSelectedFilter), actionType)
+        for allPassFilter in GUI.appliedAllPassFilters:
+            if allPassFilter[0] == stringOfAOfSelectedFilter: allPassFilterToBeRemoved = allPassFilter; GUI.appliedAllPassFilters.remove(allPassFilterToBeRemoved)
+    GUI.appliedFiltersDropdownMenu.menu = GUI.appliedAllPassFilters; CalculateDesignedFilterPhaseResponseAfterAllPassCorrection(complex(stringOfAOfSelectedFilter), actionType)
 
 # Calculating Phase Reponse of Selected All-Pass Filter to be Applied or Removed
 def CalculateDesignedFilterPhaseResponseAfterAllPassCorrection(valueOfA, applicationKind):
@@ -135,13 +138,13 @@ def CalculateDesignedFilterPhaseResponseAfterAllPassCorrection(valueOfA, applica
 
 # Helper Function for Determining Action of Selected Calculated All-Pass Filter on User Designed Digital Filter
 def ApplyAllPassCorrectionOnDesignedFilter(valueOfA, multiplicationParameter, applicationMethod, frequencies, phaseResponseOfAllPassFilter):
-    getattr(appliedAllPassZerosAndPolesSource.data['zeros'], applicationMethod)(1/np.conj(valueOfA)); getattr(appliedAllPassZerosAndPolesSource.data['poles'], applicationMethod)(valueOfA)
-    EmptyAndStreamSource(allPassPhaseResponseCorrectionSource, {'frequencies': [], 'phases': []}, {'frequencies': frequencies, 'phases': phaseResponseOfAllPassFilter*multiplicationParameter})
+    getattr(GUI.appliedAllPassZerosAndPolesSource.data['zeros'], applicationMethod)(1/np.conj(valueOfA)); getattr(GUI.appliedAllPassZerosAndPolesSource.data['poles'], applicationMethod)(valueOfA)
+    EmptyAndStreamSource(GUI.allPassPhaseResponseCorrectionSource, {'frequencies': [], 'phases': []}, {'frequencies': frequencies, 'phases': phaseResponseOfAllPassFilter*multiplicationParameter})
 
 # Correcting User Designed Digital Filter with Calculated Phase Reponse of Selected All-Pass Filter
 def CorrectDesignedFilterPhasePlot(attribute, oldSourceValue, newSourceValue):
     if newSourceValue['frequencies'] != []:
-        correctedPhases = phaseSource.data['phase'] + newSourceValue['phases']; phaseSource.data = {'frequencies': [], 'phase': []}; phaseSource.stream({'frequencies': newSourceValue['frequencies'], 'phase': correctedPhases})
+        correctedPhases = GUI.phaseSource.data['phase'] + newSourceValue['phases']; GUI.phaseSource.data = {'frequencies': [], 'phase': []}; GUI.phaseSource.stream({'frequencies': newSourceValue['frequencies'], 'phase': correctedPhases})
 
 #! ---------------------------------------------------------------------------------------------------------------------------------------------- #
                                             
@@ -154,21 +157,23 @@ def open_file(attr, old, new):
     data=pd.read_csv(fileinput, usecols=col_list); time=data["x"]; amp=data["y"]
     applyFilterOnSignal()
     newamp = lfilter(zerosList, polesList, amp).real
-    curdoc().add_periodic_callback(update_plot, speed)
+    GUI.curdoc().add_periodic_callback(update_plot, speed)
 
 # Update original and filtered signal graph
 def update_plot():
     global counter
-    originalSignal.line(x = time[:counter], y = amp[:counter]); filteredSignal.line(x = time[:counter], y = newamp[:counter])
-    counter=counter+1
-
-
+    while counter>900:
+        break
+    else:
+        counter=counter+ GUI.speedControlSlider.value
+    GUI.originalSignal.line(x = time[:counter], y = amp[:counter]); GUI.filteredSignal.line(x = time[:counter], y = newamp[:counter])
+    
 # Apply the filter on choosen signal
 def applyFilterOnSignal():
     global zerosComplexList, polesComplexList, zerosList, polesList 
     zerosList, polesList = [], []
-    filterList(zerosList, zerosComplexList, appliedAllPassZerosAndPolesSource, 'zeros')
-    filterList(polesList, polesComplexList, appliedAllPassZerosAndPolesSource, 'poles')
+    filterList(zerosList, zerosComplexList, GUI.appliedAllPassZerosAndPolesSource, 'zeros')
+    filterList(polesList, polesComplexList, GUI.appliedAllPassZerosAndPolesSource, 'poles')
 
 #! ---------------------------------------------------------------------------------------------------------------------------------------------- #
 
@@ -199,7 +204,7 @@ def ComplexForm(columnSource, complexList, firstColumn, secondColumn):
 def FormulateSelectedAllPassFilter(realPart, imaginaryPart, sign):
     return str(realPart)+sign+str(imaginaryPart)+'j'
 
-# 
+# Add zeros and pole to filter list
 def filterList(zerosOrPolesList, zerosOrPolesCoomplexList, appliedSource, data):
     zerosOrPolesList.extend(appliedSource.data[data])
     zerosOrPolesList.extend(zerosOrPolesCoomplexList)
@@ -208,27 +213,27 @@ def filterList(zerosOrPolesList, zerosOrPolesCoomplexList, appliedSource, data):
 
 #?######### Links of GUI Elements to Methods ##########
 
-zerosSource.on_change('data', update)
-polesSource.on_change('data', update)
-resetAll.on_click(DeleteZerosAndPoles)
-openFile.on_change('value', open_file)
-applyToSignal.on_click(applyFilterOnSignal)
-unitCirclePlot.on_event(DoubleTap, DrawZerosAndPoles)
-addToFiltersLibraryButton.on_click(AddNewAllPassFilter)
-allPassFilterPoleSource.on_change('data', UpdateAllPassPhaseResponsePlot)
-conjugateSelection.on_change('active', lambda attr, old, new: UpdateConjugateMode())
-allPassPhaseResponseCorrectionSource.on_change('data', CorrectDesignedFilterPhasePlot)
-clearZeros.on_click(lambda: DeleteAllZerosOrAllPoles(zerosSource, zerosConjugateSource))
-clearPoles.on_click(lambda: DeleteAllZerosOrAllPoles(polesSource, polesConjugateSource))
-poleOrZeroSelection.on_change('active', lambda attr, old, new: UpdateZerosAndPolesMode())
-applySelectedFilter.on_click(lambda: ActionOfSelectedAllPassFilterOnDesignedFilter('Add'))
-removeSelectedFilter.on_click(lambda: ActionOfSelectedAllPassFilterOnDesignedFilter('Remove'))
-filtersDropdownMenu.on_click(partial(UpdatingAllPassUnitCircleAndPhaseResponseAccordingToSelectedFilter, filterState='Not Applied'))
-appliedFiltersDropdownMenu.on_click(partial(UpdatingAllPassUnitCircleAndPhaseResponseAccordingToSelectedFilter, filterState='Applied'))
+GUI.zerosSource.on_change('data', update)
+GUI.polesSource.on_change('data', update)
+GUI.resetAll.on_click(DeleteZerosAndPoles)
+GUI.openFile.on_change('value', open_file)
+GUI.applyToSignal.on_click(applyFilterOnSignal)
+GUI.unitCirclePlot.on_event(GUI.DoubleTap, DrawZerosAndPoles)
+GUI.addToFiltersLibraryButton.on_click(AddNewAllPassFilter)
+GUI.allPassFilterPoleSource.on_change('data', UpdateAllPassPhaseResponsePlot)
+GUI.conjugateSelection.on_change('active', lambda attr, old, new: UpdateConjugateMode())
+GUI.allPassPhaseResponseCorrectionSource.on_change('data', CorrectDesignedFilterPhasePlot)
+GUI.clearZeros.on_click(lambda: DeleteAllZerosOrAllPoles(GUI.zerosSource, GUI.zerosConjugateSource))
+GUI.clearPoles.on_click(lambda: DeleteAllZerosOrAllPoles(GUI.polesSource, GUI.polesConjugateSource))
+GUI.poleOrZeroSelection.on_change('active', lambda attr, old, new: UpdateZerosAndPolesMode())
+GUI.applySelectedFilter.on_click(lambda: ActionOfSelectedAllPassFilterOnDesignedFilter('Add'))
+GUI.removeSelectedFilter.on_click(lambda: ActionOfSelectedAllPassFilterOnDesignedFilter('Remove'))
+GUI.filtersDropdownMenu.on_click(partial(UpdatingAllPassUnitCircleAndPhaseResponseAccordingToSelectedFilter, filterState='Not Applied'))
+GUI.appliedFiltersDropdownMenu.on_click(partial(UpdatingAllPassUnitCircleAndPhaseResponseAccordingToSelectedFilter, filterState='Applied'))
 
 #! ---------------------------------------------------------------------------------------------------------------------------------------------- #
 
 #?############# Layout ################
 
-layout=Column(welcomeMsg,Row(poleOrZeroSelection,conjugateSelection,clearPoles,clearZeros,resetAll),instructionsLine,Row(unitCirclePlot,phasePlot,magnitudePlot),Div(height=15),allPassTitle,Row(filtersDropdownMenu,applySelectedFilter,removeSelectedFilter,appliedFiltersDropdownMenu ),Row(allPassUnitCirclePlot,phaseResponseOfFilter,Column(Row(Div(text='a ='),realInputOfFilter, Div(text='+ j'), imgInputOfFilter),addToFiltersLibraryButton)),Div(height=20),realTimeFilteringTitle,Row(openFile,applyToSignal,speedControlSlider),Row(originalSignal,filteredSignal),Div(height=20))
-curdoc().add_root(layout)
+layout=GUI.Column(GUI.welcomeMsg,GUI.Row(GUI.poleOrZeroSelection,GUI.conjugateSelection,GUI.clearPoles,GUI.clearZeros,GUI.resetAll),GUI.instructionsLine,GUI.Row(GUI.unitCirclePlot,GUI.phasePlot,GUI.magnitudePlot),GUI.Div(height=15),GUI.allPassTitle,GUI.Row(GUI.filtersDropdownMenu,GUI.applySelectedFilter,GUI.removeSelectedFilter,GUI.appliedFiltersDropdownMenu ),GUI.Row(GUI.allPassUnitCirclePlot,GUI.phaseResponseOfFilter,GUI.Column(GUI.Row(GUI.Div(text='a ='),GUI.realInputOfFilter, GUI.Div(text='+ j'), GUI.imgInputOfFilter),GUI.addToFiltersLibraryButton)),GUI.Div(height=20),GUI.realTimeFilteringTitle,GUI.Row(GUI.openFile,GUI.applyToSignal,GUI.speedControlSlider),GUI.Row(GUI.originalSignal,GUI.filteredSignal),GUI.Div(height=20))
+GUI.curdoc().add_root(layout)
