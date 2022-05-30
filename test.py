@@ -1,12 +1,15 @@
+import io
+import base64
 import fileinput
 import numpy as np
+import pandas as pd
 from bokeh.layouts import *
 from bokeh.io import curdoc
 from ctypes import alignment
 from turtle import color, width
 from bokeh.events import DoubleTap
 from matplotlib.pyplot import show
-from scipy.signal import zpk2tf, freqz
+from scipy.signal import zpk2tf, freqz, lfilter
 from bokeh.models import Dropdown,RadioGroup
 from bokeh.plotting import figure, Column,Row
 from bokeh.models import PointDrawTool, ColumnDataSource,Button,Div
@@ -21,6 +24,8 @@ marker = 'circle'
 conjugate = 0
 zerosComplexList = []
 polesComplexList = []
+counter=0
+speed=500
 
 ## Plots and Graphs 
 
@@ -34,9 +39,9 @@ magnitudePlot=figure(x_range=(0,1), y_range=(0,3), tools=['pan,box_zoom'],
            title='Magnitude Response',plot_width=500, plot_height=500)           
 phaseResponseOfFilter=figure(x_range=(0,1), y_range=(-3.14,3.14), tools=['pan,box_zoom'],
 title='Phase Response of selected All-pass Filter',plot_width=650, plot_height=500)
-originalSignal=figure(x_range=(0,20), y_range=(-10,20), tools=['pan,box_zoom'],
+originalSignal=figure(x_range=(0,0.1), y_range=(-1,1), tools=['pan,box_zoom'],
 title='Original Signal',plot_width=700, plot_height=500)
-filteredSignal=figure(x_range=(0,20), y_range=(-10,20), tools=['pan,box_zoom'],
+filteredSignal=figure(x_range=(0,0.1), y_range=(-1,1), tools=['pan,box_zoom'],
 title='Filtered Signal',plot_width=700, plot_height=500)
 
 #sources
@@ -306,10 +311,33 @@ def correctDesignedFilterPhasePlot(attr, old, newSourceValue):
         correctedPhases = phaseSource.data['p'] + newSourceValue['phases']
         phaseSource.data = {'w': [], 'p': []}
         phaseSource.stream({'w': newSourceValue['frequencies'], 'p': correctedPhases})
+def open_file(attr, old, new):
+    global time
+    global amp
+    global speed
+    global newamp
+    global zerosList, polesList 
+    decoded=base64.b64decode(new)
+    fileinput=io.BytesIO(decoded)
+    col_list = ["x", "y"]
+    data=pd.read_csv(fileinput, usecols=col_list)
+    time=data["x"]
+    amp=data["y"]
+    applyFilterOnSignal()
+    newamp=lfilter(zerosList, polesList, amp)
+    print(newamp)
+    curdoc().add_periodic_callback(update_plot, speed)
+
+def update_plot():
+    global counter
+    originalSignal.line(x=time[:counter], y=amp[:counter])
+    # filteredSignal.line(x=time[:counter], y=newamp[:counter])
+    counter=counter+1
 
 #! Ro'aa
 def applyFilterOnSignal():
     global zerosComplexList, polesComplexList
+    global zerosList, polesList 
     zerosList, polesList = [], []
     zerosList.extend(appliedAllPassZerosAndPolesSource.data['zeros'])
     zerosList.extend(zerosComplexList)
@@ -336,7 +364,9 @@ allPassFilterPoleSource.on_change('data', updateAllPassPhaseResponsePlot)
 conjugateSelection.on_change('active', lambda attr, old, new: UpdateConjugateMode())
 allPassPhaseResponseCorrectionSource.on_change('data', correctDesignedFilterPhasePlot)
 poleOrZeroSelection.on_change('active', lambda attr, old, new: UpdateZerosAndPolesMode())
+openFile.on_change('value', open_file)
 
 #########################################################################################################################################
 layout=Column(welcomeMsg,Row(poleOrZeroSelection,conjugateSelection,clearPoles,clearZeros,resetAll),instructionsLine,Row(unitCirclePlot,phasePlot,magnitudePlot),Div(height=15),allPassTitle,Row(filtersDropdownMenu,applySelectedFilter,removeSelectedFilter,appliedFiltersDropdownMenu ),Row(allPassUnitCirclePlot,phaseResponseOfFilter,Column(Row(Div(text='a ='),realInputOfFilter, Div(text='+ j'), imgInputOfFilter),addToFiltersLibraryButton)),Div(height=20),realTimeFilteringTitle,Row(openFile,applyToSignal),Row(originalSignal,filteredSignal),Div(height=20))
 curdoc().add_root(layout)
+
