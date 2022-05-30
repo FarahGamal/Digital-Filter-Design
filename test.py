@@ -1,134 +1,27 @@
-import fileinput
+#*######### Imports ###########
+import io
+import base64
+from GUI import *
 import numpy as np
-from bokeh.layouts import *
-from bokeh.io import curdoc
-from ctypes import alignment
-from turtle import color, width
-from bokeh.events import DoubleTap
-from matplotlib.pyplot import show
-from scipy.signal import zpk2tf, freqz
-from bokeh.models import Dropdown,RadioGroup
-from bokeh.plotting import figure, Column,Row
-from bokeh.models import PointDrawTool, ColumnDataSource,Button,Div
-from bokeh.models.widgets import RadioButtonGroup, FileInput, TextInput
-
+import pandas as pd
+from scipy.signal import zpk2tf, freqz, lfilter
 
 #! To run the code write python -m bokeh serve --show test.py in terminal <3 
 
-## Global Variables
+#! --------------------------------------------------------------------------------------------------------------------------------------------------- #
 
-marker = 'circle'
+#? Global Variables
+
+counter=0
+speed=500
 conjugate = 0
+marker = 'circle'
 zerosComplexList = []
 polesComplexList = []
 
-## Plots and Graphs 
+#! ---------------------------------------------------------------------------------------------------------------------------------------------- #
 
-unitCirclePlot = figure(x_range=(-2,2), y_range=(-2,2), tools=[],
-           title='zPolar',plot_width=500, plot_height=500)
-allPassUnitCirclePlot = figure(x_range=(-2,2), y_range=(-2,2), tools=[],
-           title='Zero-Pole Combination Of Selected All-pass Filter',plot_width=650, plot_height=500)
-phasePlot=figure(x_range=(0,1), y_range=(-3.14,3.14), tools=['pan,box_zoom'],
-           title='Phase Response',plot_width=500, plot_height=500)
-magnitudePlot=figure(x_range=(0,1), y_range=(0,3), tools=['pan,box_zoom'],
-           title='Magnitude Response',plot_width=500, plot_height=500)           
-phaseResponseOfFilter=figure(x_range=(0,1), y_range=(-3.14,3.14), tools=['pan,box_zoom'],
-title='Phase Response of selected All-pass Filter',plot_width=650, plot_height=500)
-originalSignal=figure(x_range=(0,20), y_range=(-10,20), tools=['pan,box_zoom'],
-title='Original Signal',plot_width=700, plot_height=500)
-filteredSignal=figure(x_range=(0,20), y_range=(-10,20), tools=['pan,box_zoom'],
-title='Filtered Signal',plot_width=700, plot_height=500)
-
-#sources
-
-zerosSource = ColumnDataSource({
-    'x': [], 'y': [], 'marker': []
-})
-polesSource = ColumnDataSource({
-    'x': [], 'y': [], 'marker': []
-})
-zerosConjugateSource = ColumnDataSource({
-    'x': [], 'y': [], 'marker': []
-})
-polesConjugateSource = ColumnDataSource({
-    'x': [], 'y': [], 'marker': []
-})
-magnitudeSource= ColumnDataSource({
-    'w':[], 'h':[]
-})
-phaseSource= ColumnDataSource({
-    'w':[], 'p':[]
-})
-allPassFilterZeroSource = ColumnDataSource({
-    'x': [], 'y': [], 'marker': []
-})
-allPassFilterPoleSource = ColumnDataSource({
-    'x': [], 'y': [], 'marker': []
-})
-phaseResponseOfAllPassFilterSource=ColumnDataSource({
-    'frequencies':[], 'phases':[]
-})
-
-allPassPhaseResponseCorrectionSource=ColumnDataSource({
-    'frequencies':[], 'phases':[]
-})
-appliedAllPassZerosAndPolesSource  = ColumnDataSource({
-    'zeros': [], 'poles': []
-})
-
-##Buttons and controls
-
-poleOrZeroSelection = RadioButtonGroup(labels=['Zero', 'Pole'], active=0)
-conjugateSelection = RadioButtonGroup(labels=['No Conjugate', 'Conjugate'], active=0)
-resetAll = Button(label='Reset all', width=270)
-clearZeros= Button(label='Clear Zeros', width=270)
-clearPoles= Button(label='Clear Poles', width=270)
-filtersLibrary = [("-1.9+0j", "0"), ("-0.6+0j", "1"), ("0.5+0.2j", "2"), ("0.6+0j", "3"), ("1.5+1.2j", "4"), ("1.9+0j", "5")]
-appliedAllPassFilters=[("...","0" )] 
-addToFiltersLibraryButton = Button(label='Add To All-pass Filters Library', width=100)
-removeSelectedFilter = Button(label='Remove Selected All-pass Filter')
-applySelectedFilter = Button(label='Apply Selected All-pass Filter')
-filtersDropdownMenu = Dropdown(label="All-pass Filters Library", button_type="warning", menu=filtersLibrary)
-appliedFiltersDropdownMenu = Dropdown(label="Applied All-pass Filters to Designed Digital Filter", button_type="warning", menu=appliedAllPassFilters)
-realInputOfFilter= TextInput(title='', width=50)
-imgInputOfFilter= TextInput(title='', width=50)
-openFile= FileInput(accept= '.csv', width=700)
-applyToSignal= Button(label='Apply Filter on Signal', width = 300)
-
-##Unit Circles Plotting
-
-unitCirclePlot.circle(0,0,radius=1,fill_color=None,line_color='red')
-allPassUnitCirclePlot.circle(0,0,radius=1,fill_color=None,line_color='red')
-
-#rendering
-
-zeroRenderer = unitCirclePlot.scatter(x='x', y='y',marker='marker', source=zerosSource,size=15)
-poleRenderer = unitCirclePlot.scatter(x='x', y='y',marker='marker', source=polesSource,size=15)
-zerosConjugaterenderer = unitCirclePlot.scatter(x='x', y='y',marker='marker', source=zerosConjugateSource,size=15)
-polesConjugaterenderer = unitCirclePlot.scatter(x='x', y='y',marker='marker', source=polesConjugateSource,size=15)
-allPassFilterZeroRenderer = allPassUnitCirclePlot.scatter(x='x', y='y',marker='marker', source=allPassFilterZeroSource,size=15)
-allPassFilterPoleRenderer = allPassUnitCirclePlot.scatter(x='x', y='y',marker='marker', source=allPassFilterPoleSource,size=15)
-
-magnitudePlot.line(x='w',y='h',source=magnitudeSource)
-phasePlot.line(x='w',y='p',source=phaseSource)
-phaseResponseOfFilter.line(x='frequencies',y='phases',source=phaseResponseOfAllPassFilterSource)
-
-draw_tool = PointDrawTool(renderers=[zeroRenderer,poleRenderer,zerosConjugaterenderer,polesConjugaterenderer],add=False)
-unitCirclePlot.add_tools(draw_tool)
-unitCirclePlot.toolbar.active_tap = draw_tool
-
-draw_tool2 = PointDrawTool(renderers=[allPassFilterZeroRenderer, allPassFilterPoleRenderer],add=False)
-allPassUnitCirclePlot.add_tools(draw_tool2)
-allPassUnitCirclePlot.toolbar.active_tap = draw_tool2
-
-welcomeMsg= Div(text='<h1><FONT COLOR= "#e1773e">Welcome to Our Digital Filter Designer!</FONT> </h1>', align= 'center')
-instructionsLine= Div(text='<h3><FONT COLOR= "#e1773e">Double click the plotter to add Zero/Pole.  Select a Zero/Pole then click backspace to delete it.</FONT> </h3>', align= 'start')
-allPassTitle= Div(text='<h2><FONT COLOR= "#e1773e">Phase Correction using All-pass Filter </FONT></h2>', align= 'start')
-realTimeFilteringTitle= Div(text='<h2><FONT COLOR= "#e1773e">Real-time Signal Filtering</FONT></h2>', align= 'start')
-
-#########################################################################################################################################
-
-#? Methods
+                                            ##########? Methods ##########
 
 # Update zeros and poles mode
 def UpdateZerosAndPolesMode():
@@ -140,10 +33,8 @@ def UpdateZerosAndPolesMode():
 # Draw zeros and poles on the graph
 def DrawZerosAndPoles(event):
     global marker
-    if marker == 'circle': 
-        zerosSource.stream({ 'x': [event.x], 'y': [event.y], 'marker': [marker] })
-    else: 
-        polesSource.stream({ 'x': [event.x], 'y': [event.y], 'marker': [marker] })
+    if marker == 'circle': zerosSource.stream({ 'x': [event.x], 'y': [event.y], 'marker': [marker] })
+    else: polesSource.stream({ 'x': [event.x], 'y': [event.y], 'marker': [marker] })
 
 # Delete both zeros and poles
 def DeleteZerosAndPoles():
@@ -156,23 +47,17 @@ def DeleteZerosAndPoles():
     ZerosAndPolesCalculations()
 
 # Deletes all zeros
-def DeleteZeros():
-    zerosSource.data = {'x': [], 'y': [], 'marker': []}
-    zerosConjugateSource.data = {'x': [], 'y': [], 'marker': []}
+def DeleteZeros(): ClearSource(zerosSource); ClearSource(zerosConjugateSource)
 
 # Deletes all poles
-def DeletePoles():
-    polesSource.data = {'x': [], 'y': [], 'marker': []}
-    polesConjugateSource.data = {'x': [], 'y': [], 'marker': []}
+def DeletePoles(): ClearSource(polesSource); ClearSource(polesConjugateSource)
 
 # Update the Conjugate Mode  
 def UpdateConjugateMode():
     global conjugate
     conjugate = conjugateSelection.active
     if conjugate == 0: 
-        zerosConjugateSource.data = {'x': [], 'y': [], 'marker': []}
-        polesConjugateSource.data = {'x': [], 'y': [], 'marker': []}
-        ZerosAndPolesCalculations()
+        ClearSource(zerosConjugateSource); ClearSource(polesConjugateSource); ZerosAndPolesCalculations()
     else: DrawConjugate()
 
 # Draw the Conjugate
@@ -180,16 +65,13 @@ def DrawConjugate():
     global conjugate
     conjugate = conjugateSelection.active
     if conjugate == 1: 
-        zerosConjugateSource.data = {'x': [], 'y': [], 'marker': []}
-        polesConjugateSource.data = {'x': [], 'y': [], 'marker': []}
-        for i in range(len(zerosSource.data['y'])): zerosConjugateSource.stream({'x':[zerosSource.data['x'][i]], 'marker':[zerosSource.data['marker'][i]], 'y':[zerosSource.data['y'][i]*-1]})
-        for j in range(len(polesSource.data['y'])): polesConjugateSource.stream({'x':[polesSource.data['x'][j]], 'marker':[polesSource.data['marker'][j]], 'y':[polesSource.data['y'][j]*-1]})
+        ClearSource(zerosConjugateSource); ClearSource(polesConjugateSource); ZerosAndPolesCalculations()
+        ConjugateForm(zerosSource, zerosConjugateSource); ConjugateForm(polesSource, polesConjugateSource)
     ZerosAndPolesCalculations()
 
 def ZerosAndPolesCalculations():
     global zerosComplexList, polesComplexList
-    zerosComplexList = []
-    polesComplexList = []
+    zerosComplexList, polesComplexList = [], []
     for i in  range(len(zerosSource.data['x'])): 
         zerosComplexList.append(zerosSource.data['x'][i]+zerosSource.data['y'][i]*1j)
     for i in  range(len(zerosConjugateSource.data['x'])): 
@@ -222,6 +104,8 @@ def DrawMagnitudeAndPhase():
 def update(attr, old, new):
     DrawConjugate()
     ZerosAndPolesCalculations()
+
+###############################################################!
 
 def AddNewAllPassFilter():
     realPartOfA = realInputOfFilter.value_input
@@ -307,9 +191,27 @@ def correctDesignedFilterPhasePlot(attr, old, newSourceValue):
         phaseSource.data = {'w': [], 'p': []}
         phaseSource.stream({'w': newSourceValue['frequencies'], 'p': correctedPhases})
 
-#! Ro'aa
+####################################################################!
+
+def open_file(attr, old, new):
+    global time, amp, speed, newamp, zerosList, polesList 
+    decoded = base64.b64decode(new)
+    fileinput = io.BytesIO(decoded)
+    col_list = ["x", "y"]
+    data=pd.read_csv(fileinput, usecols=col_list)
+    time=data["x"]; amp=data["y"]
+    applyFilterOnSignal()
+    newamp = lfilter(zerosList, polesList, amp).real
+    print(newamp)
+    curdoc().add_periodic_callback(update_plot, speed)
+
+def update_plot():
+    global counter
+    originalSignal.line(x = time[:counter], y = amp[:counter]); filteredSignal.line(x = time[:counter], y = newamp[:counter])
+    counter=counter+1
+
 def applyFilterOnSignal():
-    global zerosComplexList, polesComplexList
+    global zerosComplexList, polesComplexList, zerosList, polesList 
     zerosList, polesList = [], []
     zerosList.extend(appliedAllPassZerosAndPolesSource.data['zeros'])
     zerosList.extend(zerosComplexList)
@@ -318,13 +220,30 @@ def applyFilterOnSignal():
     print(zerosList)
     print(polesList)
 
-#? Controls
+#! ---------------------------------------------------------------------------------------------------------------------------------------------- #
+
+                                            ##########? Helper Functions ##########
+
+# Clear sources 
+def ClearSource(sourceName):
+    sourceName.data = {'x': [], 'y': [], 'marker': []}
+
+# Create Conjugate for zeros and poles
+def ConjugateForm(sourceName, conjugateName):
+    for i in range(len(sourceName.data['y'])): conjugateName.stream({'x':[sourceName.data['x'][i]], 'marker':[sourceName.data['marker'][i]], 'y':[sourceName.data['y'][i]*-1]})
+
+
+
+#! ---------------------------------------------------------------------------------------------------------------------------------------------- #
+
+#?######### Links of GUI Elements to Methods ##########
 
 clearZeros.on_click(DeleteZeros)
 clearPoles.on_click(DeletePoles)
 zerosSource.on_change('data', update)
 polesSource.on_change('data', update)
 resetAll.on_click(DeleteZerosAndPoles)
+openFile.on_change('value', open_file)
 applyToSignal.on_click(applyFilterOnSignal)
 filtersDropdownMenu.on_click(SelectAllPassFilter)
 unitCirclePlot.on_event(DoubleTap, DrawZerosAndPoles)
@@ -337,6 +256,9 @@ conjugateSelection.on_change('active', lambda attr, old, new: UpdateConjugateMod
 allPassPhaseResponseCorrectionSource.on_change('data', correctDesignedFilterPhasePlot)
 poleOrZeroSelection.on_change('active', lambda attr, old, new: UpdateZerosAndPolesMode())
 
-#########################################################################################################################################
-layout=Column(welcomeMsg,Row(poleOrZeroSelection,conjugateSelection,clearPoles,clearZeros,resetAll),instructionsLine,Row(unitCirclePlot,phasePlot,magnitudePlot),Div(height=15),allPassTitle,Row(filtersDropdownMenu,applySelectedFilter,removeSelectedFilter,appliedFiltersDropdownMenu ),Row(allPassUnitCirclePlot,phaseResponseOfFilter,Column(Row(Div(text='a ='),realInputOfFilter, Div(text='+ j'), imgInputOfFilter),addToFiltersLibraryButton)),Div(height=20),realTimeFilteringTitle,Row(openFile,applyToSignal),Row(originalSignal,filteredSignal),Div(height=20))
+#! ---------------------------------------------------------------------------------------------------------------------------------------------- #
+
+#?############# Layout ################
+
+layout=Column(welcomeMsg,Row(poleOrZeroSelection,conjugateSelection,clearPoles,clearZeros,resetAll),instructionsLine,Row(unitCirclePlot,phasePlot,magnitudePlot),Div(height=15),allPassTitle,Row(filtersDropdownMenu,applySelectedFilter,removeSelectedFilter,appliedFiltersDropdownMenu ),Row(allPassUnitCirclePlot,phaseResponseOfFilter,Column(Row(Div(text='a ='),realInputOfFilter, Div(text='+ j'), imgInputOfFilter),addToFiltersLibraryButton)),Div(height=20),realTimeFilteringTitle,Row(openFile,applyToSignal,speedControlSlider),Row(originalSignal,filteredSignal),Div(height=20))
 curdoc().add_root(layout)
